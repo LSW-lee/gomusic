@@ -1,0 +1,40 @@
+language: nodejs
+node_js:
+  - 16
+
+cache:
+  yarn: true
+  directories:
+  - node_modules
+
+env:
+  global:
+    - PATH=$HOME/.yarn/bin:$PATH
+    - PORT=3000
+
+branches:
+  only:
+    - master
+
+before_deploy:
+  - mkdir -p before-deploy
+  - cd before-deploy && zip -r before-deploy * #before-deploy로 이동 후 전체 압축
+  - cd ../ && mkdir -p deploy #상위 디렉토리로 이동 후 deploy 디렉토리 생성
+  - mv before-deploy/before-deploy.zip deploy/gomusic.zip
+
+deploy:
+  - provider: s3
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key: $AWS_SECRET_KEY
+    bucket: swlee-build
+    region: ap-northeast-2
+    skip_cleanup: true
+    acl: private
+    local_dir: deploy
+    wait-until-deployed: true
+
+# CI 실행 완료 시 메일로 알람
+notifications:
+  email:
+    recipients:
+      - skek7811@gmail.com
